@@ -365,6 +365,7 @@
     }
     $('div .ricons')[0].appendChild(x);
 
+    //Add talk button
 
     // Select the element you want to monitor
     const targetElement = $('.time')[0]
@@ -385,9 +386,8 @@
     const chatObserver = new MutationObserver((mutationsList) => {
         for (const mutation of mutationsList) {
             if (mutation.type === 'childList' && mutation.target.children.length==3) {
-                console.log(mutation.target);
-                $("span[title='Good game']").click();
-                $("span[title='Well played']").click();
+                //$("span[title='Good game']").click();
+                //$("span[title='Well played']").click();
                 if($('.ruser-bottom.ruser.user-link')[0].children[3].tagName == "GOOD"){
                     send("WOO I win! Good game man, and don't feel bad about losing to me, I'm just too good ;)");
                 } else {
@@ -414,9 +414,37 @@
     }
 
     //Say Hello, Good luck
-    setTimeout(function(){$('span[title="Hello"]')[0].click();$('span[title="Good luck"]')[0].click();
-                         send("Hello, "+$('a.text')[1].textContent+"! Good luck, I'll be using the Jerome gambit if I'm white. And I'll make sure you never run out of time.");
+    setTimeout(function(){
+        //$('span[title="Hello"]')[0].click();
+        //$('span[title="Good luck"]')[0].click();
+        send("Hello, "+$('a.text')[1].textContent+"! Good luck, I'll be using the Jerome gambit if I'm white. And I'll make sure you never run out of time.");
                          },500);
+
+
+    //Speech recognition
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.onresult = function(event) {
+        console.log(event.results[event.resultIndex][0].transcript);
+        send(event.results[event.resultIndex][0].transcript);
+    }
+    recognition.onstart = function() {
+        console.log('Speech recognition started');
+    };
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+    };
+    recognition.onend = function() {
+        console.log('Speech recognition ended');
+    };
+
+    //Unfortunately this doesn't work in brave https://stackoverflow.com/questions/74113965/speechrecognition-emitting-network-error-event-in-brave-browser
+    var y = document.createElement('button');
+    y.innerText = 'Talk';
+    y.classList.add('fbt');
+    y.onclick = function(){recognition.start()}
+    $('div .ricons')[0].appendChild(y);
 
 
 })();
