@@ -418,7 +418,7 @@
         //$('span[title="Hello"]')[0].click();
         //$('span[title="Good luck"]')[0].click();
         send("Hello, "+$('a.text')[1].textContent+"! Good luck, I'll be using the Jerome gambit if I'm white. And I'll make sure you never run out of time.");
-                         },500);
+    },1000);
 
 
     //Speech recognition
@@ -445,6 +445,8 @@
     y.classList.add('fbt');
     y.onclick = function(){recognition.start()}
     $('div .ricons')[0].appendChild(y);
+
+    //var stockfish = new Worker('https://labinatorsolutions.github.io/stockfish-chess-web-gui/js/stockfish.js');
 
 
 })();
