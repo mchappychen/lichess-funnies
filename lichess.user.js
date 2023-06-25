@@ -6,7 +6,7 @@
 // @match        https://lichess.org/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=lichess.org
 // @grant        none
-// @updateURL  https://github.com/mchappychen/lichess-funnies/blob/main/lichess.user.js
+// @updateURL    https://github.com/mchappychen/lichess-funnies/blob/main/lichess.user.js
 // @downloadURL  https://github.com/mchappychen/lichess-funnies/blob/main/lichess.user.js
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
 // ==/UserScript==
