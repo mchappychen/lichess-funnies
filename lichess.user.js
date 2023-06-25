@@ -312,7 +312,11 @@ setTimeout(function() {
                 game.move(moves[i].textContent);
             }
             display.value = "Move " + piece(game.get(bestMove.substring(0,2)).type)+" to " +bestMove.substring(2) + "\n\n";
-            display.value += "Enemy might move "+piece(game.get(event.data.split(" ")[3].substring(0,2)).type)+" to "+event.data.split(" ")[3].substring(2);
+            try{
+                display.value += "Enemy might move "+piece(game.get(event.data.split(" ")[3].substring(0,2)).type)+" to "+event.data.split(" ")[3].substring(2);
+            }catch{
+                console.log('Error: event.data: ',event.data)
+            }
         }
     };
 
