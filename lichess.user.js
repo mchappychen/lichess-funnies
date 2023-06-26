@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Lichess Gambit Opening
-// @version      5
-// @description  Show me gambit openings
+// @name         Lichess Funnies
+// @version      6
+// @description  Show me gambit openings and hints
 // @author       Michael
 // @match        https://lichess.org/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=lichess.org
@@ -162,7 +162,7 @@ setTimeout(function() {
     }
 
     //Add button for gambits
-    var x = document.createElement('button');x.innerText = 'Gambits';x.classList.add('fbt');
+    var x = document.createElement('button');x.innerText = 'Gambs';x.classList.add('fbt');
     x.onclick = function(){
         //Go to notes tab
         $(".mchat__tabs")[0].children[1].click();
@@ -244,6 +244,39 @@ setTimeout(function() {
     //Say Greetings
     send("Hello, "+$('a.text')[1].textContent+"! Good luck to you. Don't hold back cause I'm going all out ;) Don't worry about time.");
 
+    var autoHint = false;
+    var lastMove = 0;
+    const moveObserver = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList' && mutation.target.tagName == 'L4X' && mutation.target.children[mutation.target.children.length-1]) {
+                $('piece').removeClass('ghost');
+                $('coord').css({'background-color':'','height':'','width':'','position':'relative','bottom':'','right':''});
+                if(lastMove == mutation.target.children[mutation.target.children.length-1] || mutation.target.children[mutation.target.children.length-1].tagName != "KWDB"){
+                    return
+                }
+                lastMove = mutation.target.children[mutation.target.children.length-1];
+                //If we're white, only get black moves. Vice bersa
+                if ($('.cg-wrap')[0].classList[1] == 'orientation-white' && mutation.target.children.length%3!=0){
+                    return
+                }
+                if ($('.cg-wrap')[0].classList[1] == 'orientation-black' && mutation.target.children.length%3==0){
+                    return
+                }
+                console.log(mutation.target.children.length,lastMove);
+                if (autoHint){
+                    var game = new Chess();
+                    let moves = $('kwdb')
+                    for(let i=0;i<moves.length;i++){
+                        game.move(moves[i].textContent)
+                    }
+                    stockfish.postMessage('position fen '+game.fen());
+                    stockfish.postMessage('go depth 10');
+                }
+            }
+        }
+    });
+    moveObserver.observe($('rm6')[0], observerConfig);
+
     //Speech recognition, only works for non-Brave browsers
     if(!window.navigator.brave){
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -316,6 +349,17 @@ setTimeout(function() {
                     game.move(moves[i].textContent);
                 }
                 display.value = "Move " + piece(game.get(bestMove.substring(0,2)).type)+" to " +bestMove.substring(2) + "\n\n";
+                //Highlight the board, if you're white, look for white pieces
+                $('piece').addClass('ghost');
+                if($('.cg-wrap')[0].classList[1] == 'orientation-white'){
+                    $('piece.white.'+piece(game.get(bestMove.substring(0,2)).type).toLowerCase()).removeClass('ghost');
+                } else {
+                    $('piece.black.'+piece(game.get(bestMove.substring(0,2)).type).toLowerCase()).removeClass('ghost');
+                }
+                //Criss-cross the square to move the piece to
+                $('coord:contains("'+bestMove.substring(2,3)+'")').css({'background-color':'rgb(0,255,0,0.2)','height':'700px','position':'relative','bottom':'700px','right':'3px'});
+                $('coord:contains("'+bestMove.substring(3,4)+'")').css({'background-color':'rgb(0,255,0,0.2)','width':'700px','position':'relative','right':'700px','bottom':'35px'});
+                //rgb(0,255,0,0.3)
                 try{
                     //Analyze outcome of possible enemy move
                     display.value += "If enemy move "+piece(game.get(event.data.split(" ")[3].substring(0,2)).type)+" to "+event.data.split(" ")[3].substring(2) + "\n";
@@ -334,7 +378,6 @@ setTimeout(function() {
                         promotion: ponder[3]
                     });
                     secondMoves = [{ from: match[1], to: match[2], promotion: match[3] },{ from: ponder[1], to: ponder[2], promotion: ponder[3] }];
-                    console.log(game.history());
                     stockfish.postMessage('position fen '+game.fen());
                     stockfish.postMessage('go depth 10');
                 }catch{
@@ -391,6 +434,17 @@ setTimeout(function() {
     }
     $('div .ricons')[0].appendChild(sfbutton);
 
+    //Add button to toggle auto-hints
+    let auHintButton = document.createElement('button');
+    auHintButton.innerText = 'AutoHint-OFF';
+    auHintButton.classList.add('fbt');
+    auHintButton.onclick = function(){
+        auHintButton.innerText = auHintButton.innerText=="Auto-OFF" ? "Auto-ON" : "Auto-OFF";
+        autoHint = !autoHint;
+        auHintButton.style.backgroundColor = autoHint ? "green" : "";
+    }
+    $('div .ricons')[0].appendChild(auHintButton);
+
     //Make all buttons have a blue border when clicked
     $('.fbt').on('mousedown',function(){
         this.style.border = '4px solid blue';
@@ -403,6 +457,7 @@ setTimeout(function() {
     $('.files coord').css('font-size','50px');
     $('.ranks coord').css('font-size','20px');
     $('div.round__underboard').css('display','none');
+
 
 },800);
 
