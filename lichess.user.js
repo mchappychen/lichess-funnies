@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Funnies
-// @version      8
-// @description  Lichess CHints
+// @version      9
+// @description  Lichess Hints
 // @author       Michael and Ian
 // @match        https://lichess.org/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=lichess.org
@@ -49,7 +49,7 @@ setTimeout(function() {
             element.dispatchEvent(event);
         } catch {}
     }
-
+    
     var autoHint = false;
     var lastMove = 0;
     let firstMove = false;
@@ -85,7 +85,7 @@ setTimeout(function() {
 
                 if (autoHint){
                     stockfish.postMessage('position fen '+game.fen());
-                    stockfish.postMessage('go depth 11');
+                    stockfish.postMessage('go depth 10');
                 }
             }
         }
@@ -219,7 +219,7 @@ setTimeout(function() {
                     });
                     secondMoves = [{ from: match[1], to: match[2], promotion: match[3] },{ from: ponder[1], to: ponder[2], promotion: ponder[3] }];
                     stockfish.postMessage('position fen '+game2.fen());
-                    stockfish.postMessage('go depth 10');
+                    stockfish.postMessage('go depth 12');
                     //Display enemy ponder
                     if($('.cg-wrap')[0].classList[1] == 'orientation-white'){
                         let arrowCoords1 = getArrowCoords(ponder[1],'white');
@@ -292,7 +292,7 @@ setTimeout(function() {
     $('div.round__underboard').css('display','none');
 
 
-},600);
+},500);
 
 
 
