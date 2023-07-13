@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Lichess Funnies
-// @version      9
+// @version      10
 // @description  Lichess Hints
 // @author       Michael and Ian
 // @match        https://lichess.org/*
@@ -26,6 +26,18 @@ setTimeout(function() {
     var stockfish = new Worker(URL.createObjectURL(blob));
 
     var game = new Chess();
+
+    //Update game board
+    try {
+        let moves = $('kwdb');
+        for(let i=0;i<moves.length;i++){
+            game.move(moves[i].textContent);
+        }
+    } catch {
+        console.log("No one made a move yet");
+    }
+
+    lichess.socket.autoReconnect = true;
 
     //For MutationObserver
     const observerConfig = {
@@ -69,11 +81,11 @@ setTimeout(function() {
 
                 //Get last move
                 lastMove = mutation.target.children[mutation.target.children.length-1];
-                console.log(lastMove);
+                //console.log(lastMove);
 
                 //Update our game board
                 game.move(lastMove.textContent);
-                console.log(game.history());
+                //console.log(game.history());
 
                 //If we're white, only get black moves. Vice versa
                 if ($('.cg-wrap')[0].classList[1] == 'orientation-white' && mutation.target.children.length%3!=0){
@@ -82,10 +94,9 @@ setTimeout(function() {
                 if ($('.cg-wrap')[0].classList[1] == 'orientation-black' && mutation.target.children.length%3==0){
                     return
                 }
-
                 if (autoHint){
                     stockfish.postMessage('position fen '+game.fen());
-                    stockfish.postMessage('go depth 10');
+                    stockfish.postMessage('go depth 15');
                 }
             }
         }
@@ -174,11 +185,14 @@ setTimeout(function() {
         return [x,y];
     }
 
+    window.D = function(a){return true}
+
     var secondMove = false; //For further analysis
     var secondMoves;
     stockfish.onmessage = function(event) {
         if(event.data.substring(0,8) == "bestmove"){
             if (!secondMove){
+                console.log(`socket.rep.${Math.round(Date.now() / 1e3 / 3600 / 3)}`,`socket.rep.${Math.round(Date.now() / 1e3 / 3600 / 3)}`.nodeType,D(`socket.rep.${Math.round(Date.now() / 1e3 / 3600 / 3)}`));
                 let bestMove = event.data.split(" ")[1];
                 //Remove all arrows
                 if($('.cg-wrap')[0].classList[1] == 'orientation-white'){
@@ -188,6 +202,9 @@ setTimeout(function() {
                     $('g')[0].innerHTML += '<circle stroke="#15781B" stroke-width="0.07" fill="lime" opacity="0.8" cx="'+arrowCoords1[0]+'" cy="'+arrowCoords1[1]+'" r="0.4" ></circle>';
                     $('g')[0].innerHTML += '<circle stroke="#15781B" stroke-width="0.07" fill="red" opacity="0.6" cx="'+arrowCoords2[0]+'" cy="'+arrowCoords2[1]+'" r="0.4" ></circle>';
                     //$('defs')[0].innerHTML += '<marker id="arrowhead-g" orient="auto" markerWidth="4" markerHeight="8" refX="2.05" refY="2" cgKey="g"><path d="M0,0 V4 L3,2 Z" fill="#15781B"></path></marker>';
+                    setTimeout(function(){
+                        lichess.socket.send('move', { u: bestMove }, { ackable: true, sign:lichess.socket._sign });
+                    },Math.random()*10+10);
                 } else {
                     let arrowCoords1 = getArrowCoords(bestMove.substring(0,2),'black');
                     let arrowCoords2 = getArrowCoords(bestMove.substring(2),'black');
@@ -195,7 +212,11 @@ setTimeout(function() {
                     $('g')[0].innerHTML += '<circle stroke="#15781B" stroke-width="0.07" fill="lime" opacity="0.8" cx="'+arrowCoords1[0]+'" cy="'+arrowCoords1[1]+'" r="0.4" ></circle>';
                     $('g')[0].innerHTML += '<circle stroke="#15781B" stroke-width="0.07" fill="red" opacity="0.6" cx="'+arrowCoords2[0]+'" cy="'+arrowCoords2[1]+'" r="0.4" ></circle>';
                     //$('defs')[0].innerHTML += '<marker id="arrowhead-g" orient="auto" markerWidth="4" markerHeight="8" refX="2.05" refY="2" cgKey="g"><path d="M0,0 V4 L3,2 Z" fill="#15781B"></path></marker>';
+                    setTimeout(function(){
+                        lichess.socket.send('move', { u: bestMove }, { ackable: true, sign:lichess.socket._sign });
+                    },Math.random()*10+10);
                 }
+                return;
                 try{
                     //Analyze outcome of possible enemy move
                     secondMove = true;
@@ -219,7 +240,7 @@ setTimeout(function() {
                     });
                     secondMoves = [{ from: match[1], to: match[2], promotion: match[3] },{ from: ponder[1], to: ponder[2], promotion: ponder[3] }];
                     stockfish.postMessage('position fen '+game2.fen());
-                    stockfish.postMessage('go depth 12');
+                    stockfish.postMessage('go depth 13');
                     //Display enemy ponder
                     if($('.cg-wrap')[0].classList[1] == 'orientation-white'){
                         let arrowCoords1 = getArrowCoords(ponder[1],'white');
@@ -271,7 +292,6 @@ setTimeout(function() {
     auHintButton.innerText = 'Auto-OFF';
     auHintButton.classList.add('fbt');
     auHintButton.onclick = function(){
-        console.log(auHintButton.innerText);
         auHintButton.innerText = auHintButton.innerText == "AUTO-OFF" ? "Auto-ON" : "Auto-OFF";
         autoHint = !autoHint;
         auHintButton.style.backgroundColor = autoHint ? "green" : "";
