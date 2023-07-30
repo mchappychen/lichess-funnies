@@ -17,9 +17,5 @@ worker.onmessage = function(event) {
 // Post a message to the worker
 worker.postMessage('Hello from Main Thread!');
 
-// Don't forget to revoke the Blob URL when it's no longer needed
-URL.revokeObjectURL(blobUrl);
-
-
 
 
