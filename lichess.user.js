@@ -17,6 +17,8 @@
 //Don't run in lobby
 if (window.location.href == 'https://lichess.org/'){return}
 
+window.lichess = window.site;
+
 //Stockfish engine and FEN generator
 window.game = new Chess();
 
@@ -159,12 +161,12 @@ function run(){
             if (autoHint){
                 stockfish.postMessage('position fen '+game.fen());
                 var time = $("div.time")[1].innerText.split("\n");
-                if (game.history().length < 16){
-                    stockfish.postMessage('go depth 9');
+                if (game.history().length < 12){
+                    stockfish.postMessage('go depth 6');
                 } else if (parseInt(time[0])*60 + parseInt(time[2]) < 2){
                     stockfish.postMessage('go depth 5 movetime 50');
                 } else {
-                    stockfish.postMessage('go depth 12');
+                    stockfish.postMessage('go depth 10');
                 }
             }
         }
@@ -177,7 +179,7 @@ function run(){
             if($('div.rcontrols')[0].textContent.includes("Rematch")){
                 lichess.socket.send( "rematch-yes" );
                 send("GG. Finding new opponent in 8 seconds...");
-                setTimeout(function(){$('a.fbt[href^="/#pool"]')[0].click()},8000);
+                setTimeout(function(){$('a.fbt[href^="/?hook_like"]')[0].click()},8000);
                 endObserver.disconnect();
             }
         }
@@ -187,6 +189,7 @@ function run(){
     stockfish.onmessage = function(event) {
         if(event.data.substring(0,8) == "bestmove"){
             let bestMove = event.data.split(" ")[1];
+            console.log('bestmove',bestMove)
             lichess.socket.averageLag = 1200; // trick lichess to give us more time thinking we're lagging
             lichess.socket.send('move', { u: bestMove }, { ackable: true, sign:lichess.socket._sign, withLag:true }); //sign:lichess.socket._sign tricks lichess so our socket won't get destroyed? Or is it cause we're shadowbanned?
             //Note - according to lichess.socket code:
